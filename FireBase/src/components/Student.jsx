@@ -16,7 +16,6 @@ const Student = () => {
   const [loading, setLoading] = useState(false);
 
   const studentCollectionRef = collection(db, "student");
-
   useEffect(() => {
     const getStudent = async () => {
       try {
@@ -91,7 +90,6 @@ const Student = () => {
       toast.error("Error: " + err.message);
     }
   };
-
   return (
     <div className='flex flex-col items-center p-4'>
       <div className='flex flex-col md:flex-row md:justify-between w-full mb-8'>

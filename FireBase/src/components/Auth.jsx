@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, signOut } from "firebase/auth";
 import { auth, googleProvider } from '../config/FireBaseConfig'; 
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLogin, setIsLogin] = useState(false); 
   const [isAuthenticated, setIsAuthenticated] = useState(!!auth.currentUser);
-
-  console.log(auth?.currentUser?.email);
+  const navigate = useNavigate();
   
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,6 +19,7 @@ const Auth = () => {
         await signInWithEmailAndPassword(auth, email, password);
         toast.success('Signed in successfully!');
         setIsAuthenticated(true);
+        navigate('/student');
       } catch (error) {
         console.log(error);
         toast.error(error.message);
@@ -26,8 +27,8 @@ const Auth = () => {
     } else {
       try {
         await createUserWithEmailAndPassword(auth, email, password);
-        toast.success('Account created successfully!');
-        setIsAuthenticated(true);
+        toast.success('Account created successfully! Redirecting to login...');
+        setIsLogin(true); // Switch to login mode
       } catch (error) {
         console.log(error);
         toast.error(error.message);
@@ -39,6 +40,7 @@ const Auth = () => {
     try {
       await signInWithPopup(auth, googleProvider);
       toast.success('Signed in successfully!');
+      navigate('/students');
       setIsAuthenticated(true);
     } catch (err) {
       toast.error(err.message);

@@ -10,7 +10,7 @@ const App = () => {
     <>
       <Routes>
         <Route path='/' element={<Auth />} />
-        <Route path='/student' element={<Student />} />
+        <Route path='/student' element={<Student/>} />
       </Routes>
       <ToastContainer />
     </>
