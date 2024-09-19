@@ -4,75 +4,74 @@ import { getDocs, collection, addDoc, doc, updateDoc, deleteDoc } from 'firebase
 import { toast } from 'react-toastify';
 
 const Student = () => {
-  const [students, setStudents] = useState([]); // State to store the list of students
-  const [formData, setFormData] = useState({ // State to store form data for adding or editing students
+  const [students, setStudents] = useState([]);
+  const [formData, setFormData] = useState({
     FirstName: '',
     LastName: '',
     Age: '',
     CGPA: '',
     isFeeDefaulter: false
   });
-  const [editId, setEditId] = useState(null); // State to store the ID of the student being edited
+  const [editId, setEditId] = useState(null);
+  const [loading, setLoading] = useState(false); 
 
-  const studentCollectionRef = collection(db, "student"); // Reference to the Firestore collection
+  const studentCollectionRef = collection(db, "student");
 
   useEffect(() => {
-    // Function to fetch students from Firestore
     const getStudent = async () => {
       try {
-        const data = await getDocs(studentCollectionRef); // Get documents from Firestore
-        console.log(data);
-        
-        const filteredData = data.docs.map(doc => ({ ...doc.data(), id: doc.id })); // Map document data to include IDs
-        setStudents(filteredData); // Update state with fetched data
+        const data = await getDocs(studentCollectionRef);
+        const filteredData = data.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+        setStudents(filteredData);
       } catch (err) {
-        console.log(err); // Log errors if any
+        console.log(err);
       }
     };
-    getStudent(); // Call the function to fetch students
+    getStudent();
   }, []);
 
   const handleChange = (e) => {
-    // Function to handle form input changes
     const { name, value, type, checked } = e.target;
     setFormData(prevState => ({
       ...prevState,
-      [name]: type === 'checkbox' ? checked : value // Update form data based on input type
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Prevent default form submission behavior
+    e.preventDefault();
+    setLoading(true); 
+
     try {
       if (editId) {
-        // If editing an existing student, update the student document in Firestore
         const studentDoc = doc(db, "student", editId);
         await updateDoc(studentDoc, formData);
         toast.success("Student Updated Successfully");
       } else {
-        // If adding a new student, add a new document to Firestore
         await addDoc(studentCollectionRef, formData);
         toast.success("Student Added Successfully");
       }
-      setFormData({ // Reset form data after submission
+
+      setFormData({
         FirstName: '',
         LastName: '',
         Age: '',
         CGPA: '',
         isFeeDefaulter: false
       });
-      setEditId(null); // Clear edit ID
-      // Fetch updated students list
+      setEditId(null);
+
       const data = await getDocs(studentCollectionRef);
       const filteredData = data.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-      setStudents(filteredData); // Update state with updated data
+      setStudents(filteredData);
     } catch (err) {
-      toast.error("Error: " + err.message); // Show error toast if submission fails
+      toast.error("Error: " + err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleEdit = (student) => {
-    // Function to set form data for editing
     setFormData({
       FirstName: student.FirstName,
       LastName: student.LastName,
@@ -80,27 +79,26 @@ const Student = () => {
       CGPA: student.CGPA,
       isFeeDefaulter: student.isFeeDefaulter
     });
-    setEditId(student.id); // Set the ID of the student being edited
+    setEditId(student.id);
   };
 
   const handleDelete = async (id) => {
-    // Function to delete a student from Firestore
     try {
       const studentDoc = doc(db, "student", id);
       await deleteDoc(studentDoc);
       toast.success("Student Deleted Successfully");
-      // Fetch updated students list after deletion
+
       const data = await getDocs(studentCollectionRef);
       const filteredData = data.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-      setStudents(filteredData); // Update state with updated data
+      setStudents(filteredData);
     } catch (err) {
-      toast.error("Error: " + err.message); // Show error toast if deletion fails
+      toast.error("Error: " + err.message);
     }
   };
 
   return (
     <div className='flex flex-col items-center p-4'>
-      <div className='flex flex-col md:flex-row md:justify-between w-full max-w-5xl mb-8'>
+      <div className='flex flex-col md:flex-row md:justify-between w-full mb-8'>
         <div className='w-full md:w-1/2 p-4'>
           <h1 className='text-2xl font-bold mb-4 text-center'>Student Information</h1>
           <div className='w-full max-w-lg mx-auto'>
@@ -193,6 +191,11 @@ const Student = () => {
               className='bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 w-full'>
               {editId ? 'Update Student' : 'Add Student'}
             </button>
+            {loading && (
+              <div className='flex justify-center items-center mt-4'>
+                <div className='h-14 w-14 rounded-full border-4 border-dashed border-blue-500 bg-transparent animate-spin'></div>
+              </div>
+            )}
           </form>
         </div>
       </div>
