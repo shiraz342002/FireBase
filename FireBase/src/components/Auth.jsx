@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLogin, setIsLogin] = useState(true); 
+  const [isLogin, setIsLogin] = useState(false); 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,12 +20,11 @@ const Auth = () => {
         toast.error(error.message);
       }
     } else {
-      
-      try {
         console.log("Creating New Account");
         console.log(email);
         console.log(password);
         console.log(auth);
+      try {
         
         await createUserWithEmailAndPassword(auth, email, password);
         toast.success('Account created successfully!');
