@@ -8,11 +8,12 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [isLogin, setIsLogin] = useState(false); 
 
+  console.log(auth.currentUser.email);
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (isLogin) {
-        console.log("Loging into your current Account");
       try {
         await signInWithEmailAndPassword(auth, email, password);
         toast.success('Signed in successfully!');
@@ -20,10 +21,7 @@ const Auth = () => {
         toast.error(error.message);
       }
     } else {
-        console.log("Creating New Account");
-        console.log(email);
-        console.log(password);
-        console.log(auth);
+     
       try {
         
         await createUserWithEmailAndPassword(auth, email, password);
