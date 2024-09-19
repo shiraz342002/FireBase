@@ -13,7 +13,7 @@ const Student = () => {
     isFeeDefaulter: false
   });
   const [editId, setEditId] = useState(null);
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
 
   const studentCollectionRef = collection(db, "student");
 
@@ -37,21 +37,20 @@ const Student = () => {
       [name]: type === 'checkbox' ? checked : value
     }));
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); 
-
+    setLoading(true);
     try {
       if (editId) {
         const studentDoc = doc(db, "student", editId);
         await updateDoc(studentDoc, formData);
         toast.success("Student Updated Successfully");
+        setLoading(false);
       } else {
         await addDoc(studentCollectionRef, formData);
         toast.success("Student Added Successfully");
+        setLoading(false);
       }
-
       setFormData({
         FirstName: '',
         LastName: '',
@@ -60,17 +59,14 @@ const Student = () => {
         isFeeDefaulter: false
       });
       setEditId(null);
-
       const data = await getDocs(studentCollectionRef);
       const filteredData = data.docs.map(doc => ({ ...doc.data(), id: doc.id }));
       setStudents(filteredData);
     } catch (err) {
       toast.error("Error: " + err.message);
     } finally {
-      setLoading(false);
     }
   };
-
   const handleEdit = (student) => {
     setFormData({
       FirstName: student.FirstName,
@@ -113,7 +109,7 @@ const Student = () => {
                 <div className='mt-4 flex justify-between'>
                   <button
                     onClick={() => handleEdit(student)}
-                    className='bg-yellow-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-yellow-600'>
+                    className='bg-green-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-yellow-600'>
                     Edit
                   </button>
                   <button
@@ -127,7 +123,7 @@ const Student = () => {
           </div>
         </div>
         <div className='w-full md:w-1/2 p-4'>
-          <h2 className='text-xl font-bold mb-4 text-center'>{editId ? 'Edit Student' : 'Add New Student'}</h2>
+          <h2 className='text-3xl font-bold mb-4 text-center'>{editId ? 'Edit Student' : 'Add New Student'}</h2>
           <form onSubmit={handleSubmit} className='w-full max-w-lg mx-auto'>
             <div className='mb-4'>
               <label className='block text-sm font-medium mb-1'>First Name</label>
