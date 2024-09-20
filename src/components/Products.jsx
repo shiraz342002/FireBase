@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { db } from "../config/FireBaseConfig";
+import { auth, db } from "../config/FireBaseConfig";
 import { getDocs, collection, addDoc } from 'firebase/firestore';
 import { toast } from 'react-toastify';
 import { storage } from '../config/FireBaseConfig';
@@ -16,7 +16,15 @@ const Products = () => {
         category: '',
         Price: 0,
         imageUrl: '',
+        AddedBy:''
     });
+    useEffect(() => {
+        const user = auth.currentUser;
+        if (user) {
+            const name = user.displayName || user.email.split('@')[0];
+            setFormData((prevData) => ({ ...prevData, AddedBy: name })); 
+        }
+    }, []);
 
     const productsCollectionRef = collection(db, "Products");
     const categoryCollectionRef = collection(db, "Category");
@@ -65,7 +73,7 @@ const Products = () => {
         try {
             await addDoc(productsCollectionRef, formData);
             toast.success("Product added successfully");
-            getProducts(); // Refresh product list
+            getProducts();
             resetForm();
         } catch (err) {
             console.error("Error adding product:", err);
@@ -119,20 +127,20 @@ const Products = () => {
             {loading ? (
                 <p className="text-center text-gray-500">Loading...</p>
             ) : (
-                <div className="flex flex-wrap gap-5 justify-center">
-                    {products.map(product => (
-                        <div key={product.id} className="bg-white w-96 h-80 shadow-lg rounded-lg overflow-hidden border border-gray-200 transition-transform transform hover:scale-105">
-                            <img src={product.imageUrl} alt={product.productName} className="w-full h-48 object-cover object-center" />
-                            <div className="p-4">
-                                <h1 className="text-lg font-semibold mb-1">{product.productName}</h1>
-                                <p className="text-gray-700">Price: ${product.Price}</p>
-                                <p className="text-gray-700">Sizes: {product.Sizes?.join(", ") || 'N/A'}</p>
-                                <p className="text-gray-700">Category: {product.category}</p>
-                                <p className="text-gray-700">Added By: {product.Owner}</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                <div className="flex flex-wrap gap-6 justify-center">
+    {products.map(product => (
+        <div key={product.id} className="bg-white w-80 h-112 shadow-lg rounded-lg overflow-hidden border border-gray-200 transition-transform transform hover:scale-105 hover:shadow-xl">
+            <img src={product.imageUrl} alt={product.productName} className="w-full relative  h-66 object-cover object-center transition-transform transform hover:scale-110" />
+            <div className="p-4">
+                <h1 className="text-xl font-semibold mb-2">{product.productName}</h1>
+                <p className=" text-sm text-gray-700 font-medium">Price: ${product.Price}</p>
+                <p className=" text-sm text-gray-700">Sizes: {product.Sizes?.join(", ") || 'N/A'}</p>
+                <p className=" text-sm text-gray-700">Category: {product.category}</p>
+                <p className=" text-based text-gray-900">Added By: {product.AddedBy}</p>
+            </div>
+        </div>
+    ))}
+</div>
             )}
 
             <h2 className="text-2xl font-bold mt-8 mb-4">Add New Product</h2>
