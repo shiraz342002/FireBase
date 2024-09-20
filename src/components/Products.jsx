@@ -15,7 +15,7 @@ const Products = () => {
         Sizes: [],
         category: '',
         Price: 0,
-        imageUrl: '', 
+        imageUrl: '',
     });
 
     const productsCollectionRef = collection(db, "Products");
@@ -24,17 +24,14 @@ const Products = () => {
     const uploadImage = async (file) => {
         const storageRef = ref(storage, `images/${file.name}`);
         await uploadBytes(storageRef, file);
-        const url = await getDownloadURL(storageRef);
-        console.log(url);
-        
-        return url;
+        return await getDownloadURL(storageRef);
     };
 
     const handleImageUpload = async (event) => {
         const file = event.target.files[0];
         if (file) {
             const url = await uploadImage(file);
-            setFormData({ ...formData, imageUrl: url });
+            setFormData((prevData) => ({ ...prevData, imageUrl: url }));
         }
     };
 
@@ -68,25 +65,37 @@ const Products = () => {
         try {
             await addDoc(productsCollectionRef, formData);
             toast.success("Product added successfully");
-            getProducts();
+            getProducts(); // Refresh product list
+            resetForm();
         } catch (err) {
+            console.error("Error adding product:", err);
             toast.error("Error adding product");
         }
     };
 
+    const resetForm = () => {
+        setFormData({
+            productName: '',
+            productDesc: '',
+            Sizes: [],
+            category: '',
+            Price: 0,
+            imageUrl: '',
+        });
+    };
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
+        setFormData(prevData => ({ ...prevData, [name]: value }));
     };
 
     const handleSizeChange = (e) => {
         const { value } = e.target;
-        setFormData((prevFormData) => {
-            if (prevFormData.Sizes.includes(value)) {
-                return { ...prevFormData, Sizes: prevFormData.Sizes.filter(size => size !== value) };
-            } else {
-                return { ...prevFormData, Sizes: [...prevFormData.Sizes, value] };
-            }
+        setFormData(prevData => {
+            const updatedSizes = prevData.Sizes.includes(value)
+                ? prevData.Sizes.filter(size => size !== value)
+                : [...prevData.Sizes, value];
+            return { ...prevData, Sizes: updatedSizes };
         });
     };
 
@@ -95,32 +104,39 @@ const Products = () => {
         getCategory();
     }, []);
 
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (formData.imageUrl) {
+            addProduct();
+        } else {
+            toast.error("Please upload an image before adding the product.");
+        }
+    };
+
     return (
-        <div className=" mx-auto p-6">
-            <h2 className="text-2xl font-bold mb-4">Product List</h2>
+        <div className="mx-auto p-6">
+            <h2 className="text-2xl font-bold text-center mb-4">Products List</h2>
             {loading ? (
                 <p className="text-center text-gray-500">Loading...</p>
             ) : (
-                <ul className="space-y-4 flex flex-row gap-5">
+                <div className="flex flex-wrap gap-5 justify-center">
                     {products.map(product => (
-                        <li key={product.id} className="bg-white w-1/6 shadow-md rounded-lg p-4 border border-gray-200">
-                            <img src={product.imageUrl} alt={product.productName} className="w-23 h-48 object-cover rounded-md mb-2" />
-                            <h1 className="text-xl font-bold">{product.productName}</h1>
-                            <h3 className='text-medium font-semibold'>{product.productDesc}</h3>
-                            <p className="text-gray-700">Price: ${product.Price}</p>
-                            <p className="text-gray-700">Sizes: {product.Sizes?.join(", ") || 'N/A'}</p>
-                            <p className="text-gray-700">Category: {product.category}</p>
-                            <p className="text-gray-700">Added By: {product.Owner}</p>
-                        </li>
+                        <div key={product.id} className="bg-white w-96 h-80 shadow-lg rounded-lg overflow-hidden border border-gray-200 transition-transform transform hover:scale-105">
+                            <img src={product.imageUrl} alt={product.productName} className="w-full h-48 object-cover object-center" />
+                            <div className="p-4">
+                                <h1 className="text-lg font-semibold mb-1">{product.productName}</h1>
+                                <p className="text-gray-700">Price: ${product.Price}</p>
+                                <p className="text-gray-700">Sizes: {product.Sizes?.join(", ") || 'N/A'}</p>
+                                <p className="text-gray-700">Category: {product.category}</p>
+                                <p className="text-gray-700">Added By: {product.Owner}</p>
+                            </div>
+                        </div>
                     ))}
-                </ul>
+                </div>
             )}
 
             <h2 className="text-2xl font-bold mt-8 mb-4">Add New Product</h2>
-            <form
-                className="bg-white shadow-md rounded-lg p-6 space-y-4 border border-gray-200"
-                onSubmit={(e) => { e.preventDefault(); addProduct(); }}
-            >
+            <form className="bg-white shadow-md rounded-lg p-6 space-y-4 border border-gray-200" onSubmit={handleSubmit}>
                 <input
                     type="text"
                     name="productName"
