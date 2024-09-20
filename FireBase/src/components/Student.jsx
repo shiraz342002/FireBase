@@ -47,7 +47,7 @@ const Student = () => {
     }));
   };
 
-  const handleSubmit = async (e) => {
+    const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
   
@@ -64,7 +64,6 @@ const Student = () => {
         toast.success("Student Added Successfully");
       }
   
-      // Reset form data
       setFormData({
         FirstName: '',
         LastName: '',
@@ -74,8 +73,7 @@ const Student = () => {
       });
       setEditId(null);
   
-      // Fetch all students
-      await getStudent(); // This will now fetch all students
+      await getStudent();
   
     } catch (err) {
       toast.error("Error: " + err.message);
