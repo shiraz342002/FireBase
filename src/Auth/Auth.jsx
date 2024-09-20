@@ -19,7 +19,7 @@ const Auth = () => {
         await signInWithEmailAndPassword(auth, email, password);
         toast.success('Signed in successfully!');
         setIsAuthenticated(true);
-        navigate('/student');
+        navigate('/products');
       } catch (error) {
         console.log(error);
         toast.error(error.message);
