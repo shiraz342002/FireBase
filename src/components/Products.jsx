@@ -112,10 +112,10 @@ const Products = () => {
         getCategory();
     }, []);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (formData.imageUrl) {
-            addProduct();
+            await addProduct();
         } else {
             toast.error("Please upload an image before adding the product.");
         }
