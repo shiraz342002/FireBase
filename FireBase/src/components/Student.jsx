@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { db } from "../config/FireBaseConfig";
+import { db, auth } from "../config/FireBaseConfig";
 import { getDocs, collection, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { toast } from 'react-toastify';
 
@@ -16,6 +16,7 @@ const Student = () => {
   const [loading, setLoading] = useState(false);
 
   const studentCollectionRef = collection(db, "student");
+
   useEffect(() => {
     const getStudent = async () => {
       try {
@@ -36,20 +37,30 @@ const Student = () => {
       [name]: type === 'checkbox' ? checked : value
     }));
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+
+    const updatedFormData = {
+      ...formData,
+      userId: auth?.currentUser?.uid || null
+    };
+
     try {
       if (editId) {
         const studentDoc = doc(db, "student", editId);
-        await updateDoc(studentDoc, formData);
+        await updateDoc(studentDoc, updatedFormData);
         toast.success("Student Updated Successfully");
-        setLoading(false);
       } else {
-        await addDoc(studentCollectionRef, formData);
-        toast.success("Student Added Successfully");
-        setLoading(false);
+        if (auth?.currentUser?.uid) {
+          await addDoc(studentCollectionRef, updatedFormData);
+          toast.success("Student Added Successfully");
+        } else {
+          toast.error("User not authenticated. Please log in to add a student.");
+        }
       }
+      
       setFormData({
         FirstName: '',
         LastName: '',
@@ -58,14 +69,17 @@ const Student = () => {
         isFeeDefaulter: false
       });
       setEditId(null);
+      
       const data = await getDocs(studentCollectionRef);
       const filteredData = data.docs.map(doc => ({ ...doc.data(), id: doc.id }));
       setStudents(filteredData);
     } catch (err) {
       toast.error("Error: " + err.message);
     } finally {
+      setLoading(false);
     }
   };
+
   const handleEdit = (student) => {
     setFormData({
       FirstName: student.FirstName,
@@ -90,6 +104,7 @@ const Student = () => {
       toast.error("Error: " + err.message);
     }
   };
+
   return (
     <div className='flex flex-col items-center p-4'>
       <div className='flex flex-col md:flex-row md:justify-between w-full mb-8'>

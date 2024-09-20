@@ -28,7 +28,7 @@ const Auth = () => {
       try {
         await createUserWithEmailAndPassword(auth, email, password);
         toast.success('Account created successfully! Redirecting to login...');
-        setIsLogin(true); // Switch to login mode
+        setIsLogin(true);
       } catch (error) {
         console.log(error);
         toast.error(error.message);
