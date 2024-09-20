@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { db, auth } from "../config/FireBaseConfig";
-import { getDocs, collection, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { getDocs, collection, addDoc, doc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
+import { signOut } from "firebase/auth";
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 const Student = () => {
   const [students, setStudents] = useState([]);
@@ -10,26 +12,33 @@ const Student = () => {
     LastName: '',
     Age: '',
     CGPA: '',
-    isFeeDefaulter: false
+    isFeeDefaulter: false,
+   
   });
   const [editId, setEditId] = useState(null);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const studentCollectionRef = collection(db, "student");
 
+  const getStudent = async () => {
+    try {
+      const data = await getDocs(studentCollectionRef);
+      const filteredData = data.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+      setStudents(filteredData);
+    } catch (err) {
+      console.log(err);
+      toast.error("Error fetching students");
+    }
+  };
   useEffect(() => {
-    const getStudent = async () => {
-      try {
-        const data = await getDocs(studentCollectionRef);
-        const filteredData = data.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-        setStudents(filteredData);
-      } catch (err) {
-        console.log(err);
-      }
-    };
-    getStudent();
+    if (auth?.currentUser?.uid) {
+      getStudent(); 
+    } else {
+      toast.error("Please log in to view students.");
+    }
   }, []);
-
+  
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prevState => ({
@@ -41,26 +50,21 @@ const Student = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
-    const updatedFormData = {
-      ...formData,
-      userId: auth?.currentUser?.uid || null
-    };
-
+  
     try {
       if (editId) {
         const studentDoc = doc(db, "student", editId);
-        await updateDoc(studentDoc, updatedFormData);
+        await updateDoc(studentDoc, formData);
         toast.success("Student Updated Successfully");
       } else {
-        if (auth?.currentUser?.uid) {
-          await addDoc(studentCollectionRef, updatedFormData);
-          toast.success("Student Added Successfully");
-        } else {
-          toast.error("User not authenticated. Please log in to add a student.");
-        }
+        await addDoc(studentCollectionRef, {
+          ...formData,
+          userId: auth.currentUser.uid
+        });
+        toast.success("Student Added Successfully");
       }
-      
+  
+      // Reset form data
       setFormData({
         FirstName: '',
         LastName: '',
@@ -69,17 +73,30 @@ const Student = () => {
         isFeeDefaulter: false
       });
       setEditId(null);
-      
-      const data = await getDocs(studentCollectionRef);
-      const filteredData = data.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-      setStudents(filteredData);
+  
+      // Fetch all students
+      await getStudent(); // This will now fetch all students
+  
     } catch (err) {
       toast.error("Error: " + err.message);
     } finally {
       setLoading(false);
     }
   };
-
+  
+  const handleDelete = async (id) => {
+    try {
+      const studentDoc = doc(db, "student", id);
+      await deleteDoc(studentDoc);
+      toast.success("Student Deleted Successfully");
+  
+      await getStudent(); 
+  
+    } catch (err) {
+      toast.error("Error: " + err.message);
+    }
+  };
+  
   const handleEdit = (student) => {
     setFormData({
       FirstName: student.FirstName,
@@ -90,23 +107,30 @@ const Student = () => {
     });
     setEditId(student.id);
   };
-
-  const handleDelete = async (id) => {
+  const handleLogout = async () => {
     try {
-      const studentDoc = doc(db, "student", id);
-      await deleteDoc(studentDoc);
-      toast.success("Student Deleted Successfully");
-
-      const data = await getDocs(studentCollectionRef);
-      const filteredData = data.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-      setStudents(filteredData);
+      await signOut(auth);
+      toast.success('Logged out successfully!');
+      navigate('/');
     } catch (err) {
-      toast.error("Error: " + err.message);
+      toast.error("Error logging out: " + err.message);
     }
   };
 
   return (
     <div className='flex flex-col items-center p-4'>
+      <div className='flex justify-between items-center w-full mb-8'>
+        {auth?.currentUser && (
+          <>
+            <h2 className='text-2xl font-bold'>Welcome, {auth.currentUser.email}</h2>
+            <button
+              onClick={handleLogout}
+              className='bg-red-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-600'>
+              Logout
+            </button>
+          </>
+        )}
+      </div>
       <div className='flex flex-col md:flex-row md:justify-between w-full mb-8'>
         <div className='w-full md:w-1/2 p-4'>
           <h1 className='text-2xl font-bold mb-4 text-center'>Student Information</h1>
@@ -198,13 +222,8 @@ const Student = () => {
             <button
               type='submit'
               className='bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 w-full'>
-              {editId ? 'Update Student' : 'Add Student'}
+              {editId ? 'Update Student' : loading? 'Adding...' : 'Add Student'}
             </button>
-            {loading && (
-              <div className='flex justify-center items-center mt-4'>
-                <div className='h-14 w-14 rounded-full border-4 border-dashed border-blue-500 bg-transparent animate-spin'></div>
-              </div>
-            )}
           </form>
         </div>
       </div>
