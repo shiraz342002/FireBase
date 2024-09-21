@@ -3,12 +3,12 @@ import { auth, db } from "../config/FireBaseConfig";
 import { getDocs, collection, addDoc } from 'firebase/firestore';
 import { toast } from 'react-toastify';
 import { storage } from '../config/FireBaseConfig';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-
+import { ref, uploadBytes, getDownloadURL } from 'firebase/sto';
 const Products = () => {
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(false);
+    
     const [formData, setFormData] = useState({
         productName: '',
         productDesc: '',
@@ -16,16 +16,16 @@ const Products = () => {
         category: '',
         Price: 0,
         imageUrl: '',
-        AddedBy:''
+        AddedBy: ''
     });
+
     useEffect(() => {
         const user = auth.currentUser;
         if (user) {
             const name = user.displayName || user.email.split('@')[0];
-            setFormData((prevData) => ({ ...prevData, AddedBy: name })); 
+            setFormData((prevData) => ({ ...prevData, AddedBy: name }));
         }
     }, []);
-
     const productsCollectionRef = collection(db, "Products");
     const categoryCollectionRef = collection(db, "Category");
 
@@ -34,7 +34,6 @@ const Products = () => {
         await uploadBytes(storageRef, file);
         return await getDownloadURL(storageRef);
     };
-
     const handleImageUpload = async (event) => {
         const file = event.target.files[0];
         if (file) {
@@ -42,7 +41,6 @@ const Products = () => {
             setFormData((prevData) => ({ ...prevData, imageUrl: url }));
         }
     };
-
     const getProducts = async () => {
         try {
             setLoading(true);
@@ -55,7 +53,6 @@ const Products = () => {
             setLoading(false);
         }
     };
-
     const getCategory = async () => {
         try {
             setLoading(true);
@@ -68,7 +65,6 @@ const Products = () => {
             setLoading(false);
         }
     };
-
     const addProduct = async () => {
         try {
             await addDoc(productsCollectionRef, formData);
@@ -80,7 +76,6 @@ const Products = () => {
             toast.error("Error adding product");
         }
     };
-
     const resetForm = () => {
         setFormData({
             productName: '',
@@ -91,7 +86,6 @@ const Products = () => {
             imageUrl: '',
         });
     };
-
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prevData => ({ ...prevData, [name]: value }));
@@ -106,7 +100,6 @@ const Products = () => {
             return { ...prevData, Sizes: updatedSizes };
         });
     };
-
     useEffect(() => {
         getProducts();
         getCategory();
@@ -120,7 +113,6 @@ const Products = () => {
             toast.error("Please upload an image before adding the product.");
         }
     };
-
     return (
         <div className="mx-auto p-6">
             <h2 className="text-2xl font-bold text-center mb-4">Products List</h2>
@@ -128,21 +120,20 @@ const Products = () => {
                 <p className="text-center text-gray-500">Loading...</p>
             ) : (
                 <div className="flex flex-wrap gap-6 justify-center">
-    {products.map(product => (
-        <div key={product.id} className="bg-white w-80 h-112 shadow-lg rounded-lg overflow-hidden border border-gray-200 transition-transform transform hover:scale-105 hover:shadow-xl">
-            <img src={product.imageUrl} alt={product.productName} className="w-full relative  h-66 object-cover object-center transition-transform transform hover:scale-110" />
-            <div className="p-4">
-                <h1 className="text-xl font-semibold mb-2">{product.productName}</h1>
-                <p className=" text-sm text-gray-700 font-medium">Price: ${product.Price}</p>
-                <p className=" text-sm text-gray-700">Sizes: {product.Sizes?.join(", ") || 'N/A'}</p>
-                <p className=" text-sm text-gray-700">Category: {product.category}</p>
-                <p className=" text-based text-gray-900">Added By: {product.AddedBy}</p>
-            </div>
-        </div>
-    ))}
-</div>
+                    {products.map(product => (
+                        <div key={product.id} className="bg-white w-80 h-112 shadow-lg rounded-lg overflow-hidden border border-gray-200 transition-transform transform hover:scale-105 hover:shadow-xl">
+                            <img src={product.imageUrl} alt={product.productName} className="w-full relative  h-66 object-cover object-center transition-transform transform hover:scale-110" />
+                            <div className="p-4">
+                                <h1 className="text-2xl font-semibold mb-2">{product.productName}</h1>
+                                <p className=" text-based text-gray-700 font-medium">Price: ${product.Price}</p>
+                                <p className=" text-based text-gray-700">Sizes: {product.Sizes?.join(", ") || 'N/A'}</p>
+                                <p className=" text-based text-gray-700">Category: {product.category}</p>
+                                <p className=" text-medium text-gray-900">Added By: {product.AddedBy}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             )}
-
             <h2 className="text-2xl font-bold mt-8 mb-4">Add New Product</h2>
             <form className="bg-white shadow-md rounded-lg p-6 space-y-4 border border-gray-200" onSubmit={handleSubmit}>
                 <input
@@ -193,7 +184,6 @@ const Products = () => {
                         </option>
                     ))}
                 </select>
-
                 <input
                     type="file"
                     accept="image/*"
